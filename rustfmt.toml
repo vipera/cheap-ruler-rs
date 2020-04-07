@@ -1,0 +1,13 @@
+version = "Two"
+hard_tabs = false
+tab_spaces = 4
+max_width = 80
+comment_width = 80
+wrap_comments = true
+imports_indent = "Block"
+imports_layout = "Vertical"
+reorder_imports = true
+reorder_modules = true
+reorder_impl_items = true
+space_before_colon = false
+space_after_colon = true
