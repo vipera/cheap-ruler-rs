@@ -30,7 +30,7 @@ const WGS84_F: f64 = 1.0 / 298.257223563;
 
 /// Defines common units of distance that can be used
 #[derive(Debug, PartialEq)]
-pub enum Unit {
+pub enum DistanceUnit {
     Kilometers,
     Miles,
     NauticalMiles,
@@ -40,17 +40,17 @@ pub enum Unit {
     Inches,
 }
 
-impl Unit {
+impl DistanceUnit {
     /// Provides a factor that scales the unit into kilometers
     fn conversion_factor_kilometers(&self) -> f64 {
         match *self {
-            Unit::Kilometers => 1.0,
-            Unit::Miles => 1000.0 / 1609.344,
-            Unit::NauticalMiles => 1000.0 / 1852.0,
-            Unit::Meters => 1000.0,
-            Unit::Yards => 1000.0 / 0.9144,
-            Unit::Feet => 1000.0 / 0.3048,
-            Unit::Inches => 1000.0 / 0.0254,
+            DistanceUnit::Kilometers => 1.0,
+            DistanceUnit::Miles => 1000.0 / 1609.344,
+            DistanceUnit::NauticalMiles => 1000.0 / 1852.0,
+            DistanceUnit::Meters => 1000.0,
+            DistanceUnit::Yards => 1000.0 / 0.9144,
+            DistanceUnit::Feet => 1000.0 / 0.3048,
+            DistanceUnit::Inches => 1000.0 / 0.0254,
         }
     }
 }
@@ -104,7 +104,7 @@ pub struct CheapRuler {
 }
 
 impl CheapRuler {
-    pub fn new(latitude: f64, unit: Unit) -> Self {
+    pub fn new(latitude: f64, distance_unit: DistanceUnit) -> Self {
         let cos = (latitude * f64::consts::PI / 180.0).cos();
 
         /*
@@ -115,10 +115,10 @@ impl CheapRuler {
 
         // multipliers for converting longitude and latitude
         // degrees into distance (http://1.usa.gov/1Wb1bv7)
-        let kx = unit.conversion_factor_kilometers() * (111.41513 * cos - 0.09455 * cos3 + 0.00012 * cos5);
-        let ky = unit.conversion_factor_kilometers() * (111.13209 - 0.56605 * cos2 + 0.0012 * cos4);
+        let kx = distance_unit.conversion_factor_kilometers() * (111.41513 * cos - 0.09455 * cos3 + 0.00012 * cos5);
+        let ky = distance_unit.conversion_factor_kilometers() * (111.13209 - 0.56605 * cos2 + 0.0012 * cos4);
         */
-        let mul = unit.conversion_factor_kilometers()
+        let mul = distance_unit.conversion_factor_kilometers()
             * (f64::consts::PI / 180.0)
             * WGS84_A;
         let den2 = (1.0 - WGS84_F) * (1.0 - WGS84_F)
@@ -147,21 +147,21 @@ impl CheapRuler {
     ///
     /// * `y` - y
     /// * `z` - z
-    /// * `unit` - Unit to express distances in
+    /// * `distance_unit` - Unit to express distances in
     ///
     /// # Examples
     ///
     /// ```
-    /// use cheap_ruler::{CheapRuler, Unit};
-    /// let cr = CheapRuler::from_tile(1567, 12, Unit::Meters);
+    /// use cheap_ruler::{CheapRuler, DistanceUnit};
+    /// let cr = CheapRuler::from_tile(1567, 12, DistanceUnit::Meters);
     /// ```
-    pub fn from_tile(y: u32, z: u32, unit: Unit) -> Self {
+    pub fn from_tile(y: u32, z: u32, distance_unit: DistanceUnit) -> Self {
         let n = f64::consts::PI
             * (1.0 - 2.0 * (y as f64 + 0.5) / 2u32.pow(z) as f64);
         let latitude =
             (0.5 * (n.exp() - -n.exp())).atan() * 180.0 / f64::consts::PI;
 
-        Self::new(latitude, unit)
+        Self::new(latitude, distance_unit)
     }
 
     /// Calculates the approximate distance between to geographical points
@@ -174,8 +174,8 @@ impl CheapRuler {
     /// # Examples
     ///
     /// ```
-    /// use cheap_ruler::{CheapRuler, Unit};
-    /// let cr = CheapRuler::new(44.7192003, Unit::Meters);
+    /// use cheap_ruler::{CheapRuler, DistanceUnit};
+    /// let cr = CheapRuler::new(44.7192003, DistanceUnit::Meters);
     /// let dist = cr.distance(
     ///   &(14.8901816, 44.7209699).into(),
     ///   &(14.8905188, 44.7209699).into()
@@ -209,8 +209,8 @@ impl CheapRuler {
     /// # Examples
     ///
     /// ```
-    /// use cheap_ruler::{CheapRuler, Unit};
-    /// let cr = CheapRuler::new(44.7192003, Unit::Meters);
+    /// use cheap_ruler::{CheapRuler, DistanceUnit};
+    /// let cr = CheapRuler::new(44.7192003, DistanceUnit::Meters);
     /// let bearing = cr.bearing(
     ///   &(14.8901816, 44.7209699).into(),
     ///   &(14.8905188, 44.7209699).into()
@@ -244,8 +244,8 @@ impl CheapRuler {
     /// # Examples
     ///
     /// ```
-    /// use cheap_ruler::{CheapRuler, Unit};
-    /// let cr = CheapRuler::new(44.7192003, Unit::Meters);
+    /// use cheap_ruler::{CheapRuler, DistanceUnit};
+    /// let cr = CheapRuler::new(44.7192003, DistanceUnit::Meters);
     /// let p1 = (14.8901816, 44.7209699).into();
     /// let p2 = (14.8905188, 44.7209699).into();
     /// let dist = cr.distance(&p1, &p2);
@@ -286,9 +286,9 @@ impl CheapRuler {
     /// # Example
     ///
     /// ```
-    /// use cheap_ruler::{CheapRuler, Unit};
+    /// use cheap_ruler::{CheapRuler, DistanceUnit};
     /// use geo::LineString;
-    /// let cr = CheapRuler::new(50.458, Unit::Meters);
+    /// let cr = CheapRuler::new(50.458, DistanceUnit::Meters);
     /// let line_string: LineString<f64> = vec![
     ///     (-67.031, 50.458),
     ///     (-67.031, 50.534),
@@ -575,11 +575,11 @@ mod tests {
     static CR_LATITUDE: f64 = 32.8351;
 
     fn cheap_ruler() -> CheapRuler {
-        CheapRuler::new(CR_LATITUDE, Unit::Kilometers)
+        CheapRuler::new(CR_LATITUDE, DistanceUnit::Kilometers)
     }
 
     fn cheap_ruler_miles() -> CheapRuler {
-        CheapRuler::new(CR_LATITUDE, Unit::Miles)
+        CheapRuler::new(CR_LATITUDE, DistanceUnit::Miles)
     }
 
     #[test]

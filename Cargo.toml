@@ -1,6 +1,6 @@
 [package]
 name = "cheap-ruler"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Marin Rukavina <marin@shinyshell.net>"]
 edition = "2018"
 
