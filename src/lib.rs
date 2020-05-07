@@ -9,24 +9,24 @@
 //! Note: WGS84 ellipsoid is used instead of the Clarke 1866 parameters used by
 //! the FCC formulas. See cheap-ruler-cpp#13 for more information.
 
+#[macro_use]
 extern crate geo;
 
 #[cfg(test)]
-#[macro_use]
 extern crate assert_approx_eq;
 
 use core::convert::From;
+use float_extras::f64::remainder;
 use geo::{Coordinate, LineString, Point, Polygon, Rect};
 use num_traits::Num;
 use num_traits::cast::NumCast;
 use std::f64;
 use std::iter;
 
-// equatorial radius in km
-const WGS84_A: f64 = 6378.137;
-
-// flattening
-const WGS84_F: f64 = 1.0 / 298.257223563;
+const RE: f64 = 6378.137; // equatorial radius in km
+const FE: f64 = 1.0 / 298.257223563; // flattening
+const E2: f64 = FE * (2.0 - FE);
+const RAD: f64 = f64::consts::PI / 180.0;
 
 /// Defines common units of distance that can be used
 #[derive(Debug, PartialEq)]
@@ -105,37 +105,15 @@ pub struct CheapRuler {
 
 impl CheapRuler {
     pub fn new(latitude: f64, distance_unit: DistanceUnit) -> Self {
-        let cos = (latitude * f64::consts::PI / 180.0).cos();
-
-        /*
-        let cos2 = 2.0 * cos * cos - 1.0;
-        let cos3 = 2.0 * cos * cos2 - cos;
-        let cos4 = 2.0 * cos * cos3 - cos2;
-        let cos5 = 2.0 * cos * cos4 - cos3;
-
-        // multipliers for converting longitude and latitude
-        // degrees into distance (http://1.usa.gov/1Wb1bv7)
-        let kx = distance_unit.conversion_factor_kilometers() * (111.41513 * cos - 0.09455 * cos3 + 0.00012 * cos5);
-        let ky = distance_unit.conversion_factor_kilometers() * (111.13209 - 0.56605 * cos2 + 0.0012 * cos4);
-        */
-        let mul = distance_unit.conversion_factor_kilometers()
-            * (f64::consts::PI / 180.0)
-            * WGS84_A;
-        let den2 = (1.0 - WGS84_F) * (1.0 - WGS84_F)
-            + WGS84_F * (2.0 - WGS84_F) * cos * cos;
-        let den = den2.sqrt();
+        // Curvature formulas from https://en.wikipedia.org/wiki/Earth_radius#Meridional
+        let mul = distance_unit.conversion_factor_kilometers() * RAD * RE;
+        let coslat = (latitude * RAD).cos();
+        let w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
+        let w = w2.sqrt();
 
         // multipliers for converting longitude and latitude degrees into distance
-        //   kx = pi / 180 * N * cos(phi)
-        //   ky = pi / 180 * M
-        // where phi = latitude and from
-        // https://en.wikipedia.org/wiki/Earth_radius#Principal_sections
-        //   N = normal radius of curvature
-        //     = a^2 / ((a * cos(phi))^2 + (b * sin(phi))^2)^(1/2)
-        //   M = meridional radius of curvature
-        //     = (a*b)^2 / ((a * cos(phi))^2 + (b * sin(phi))^2)^(3/2)
-        let kx = mul * cos / den;
-        let ky = mul * (1.0 - WGS84_F) * (1.0 - WGS84_F) / (den * den2);
+        let kx = mul * w * coslat; // based on normal radius of curvature
+        let ky =  mul * w * w2 * (1.0 - E2); // based on meridonal radius of curvature
 
         Self { kx, ky }
     }
@@ -156,15 +134,29 @@ impl CheapRuler {
     /// let cr = CheapRuler::from_tile(1567, 12, DistanceUnit::Meters);
     /// ```
     pub fn from_tile(y: u32, z: u32, distance_unit: DistanceUnit) -> Self {
-        let n = f64::consts::PI
-            * (1.0 - 2.0 * (y as f64 + 0.5) / 2u32.pow(z) as f64);
-        let latitude =
-            (0.5 * (n.exp() - -n.exp())).atan() * 180.0 / f64::consts::PI;
+        assert!(z < 32);
+
+        let n = f64::consts::PI * (1.0 - 2.0 * (y as f64 + 0.5) /
+            ((1u32 << z) as f64));
+        let latitude = n.sinh().atan() / RAD;
 
         Self::new(latitude, distance_unit)
     }
 
-    /// Calculates the approximate distance between to geographical points
+    /// Calculates the square of the approximate distance between two
+    /// geographical points
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - First point
+    /// * `b` - Second point
+    pub fn square_distance(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
+        let dx = long_diff(a.x(), b.x()) * self.kx;
+        let dy = (a.y() - b.y()) * self.ky;
+        dx * dx + dy * dy
+    }
+
+    /// Calculates the approximate distance between two geographical points
     ///
     /// # Arguments
     ///
@@ -183,20 +175,7 @@ impl CheapRuler {
     /// assert!(dist < 38.0);
     /// ```
     pub fn distance(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
-        let dx = (a.x() - b.x()) * self.kx;
-        let dy = a.y() - b.y();
-
-        let dy = self.ky
-            * if dy > 180.0 {
-                dy - 360.0
-            } else if dy < -180.0 {
-                dy + 360.0
-            } else {
-                dy
-            };
-
-        let square_sum = dx * dx + dy * dy;
-        square_sum.sqrt()
+        self.square_distance(a, b).sqrt()
     }
 
     /// Returns the bearing between two points in angles
@@ -218,26 +197,17 @@ impl CheapRuler {
     /// assert_eq!(bearing, 90.0);
     /// ```
     pub fn bearing(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
-        let dx = (b.x() - a.x()) * self.kx;
+        let dx = long_diff(b.x(), a.x()) * self.kx;
         let dy = (b.y() - a.y()) * self.ky;
 
-        if dx == 0.0 && dy == 0.0 {
-            0.0
-        } else {
-            let bearing = dx.atan2(dy) * 180.0 / f64::consts::PI;
-            if bearing > 180.0 {
-                bearing - 360.0
-            } else {
-                bearing
-            }
-        }
+        dx.atan2(dy) / RAD
     }
 
     /// Returns a new point given distance and bearing from the starting point
     ///
     /// # Arguments
     ///
-    /// * `p` - point
+    /// * `origin` - origin point
     /// * `dist` - distance
     /// * `bearing` - bearing
     ///
@@ -257,12 +227,12 @@ impl CheapRuler {
     /// ```
     pub fn destination(
         &self,
-        p: &Point<f64>,
+        origin: &Point<f64>,
         dist: f64,
         bearing: f64,
     ) -> Point<f64> {
-        let a = bearing * f64::consts::PI / 180.0;
-        self.offset(p, a.sin() * dist, a.cos() * dist)
+        let a = bearing * RAD;
+        self.offset(origin, a.sin() * dist, a.cos() * dist)
     }
 
     /// Returns a new point given easting and northing offsets (in ruler units)
@@ -270,11 +240,11 @@ impl CheapRuler {
     ///
     /// # Arguments
     ///
-    /// * `p` - point
+    /// * `origin` - point
     /// * `dx` - easting
     /// * `dy` - northing
-    pub fn offset(&self, p: &Point<f64>, dx: f64, dy: f64) -> Point<f64> {
-        (p.x() + dx / self.kx, p.y() + dy / self.ky).into()
+    pub fn offset(&self, origin: &Point<f64>, dx: f64, dy: f64) -> Point<f64> {
+        (origin.x() + dx / self.kx, origin.y() + dy / self.ky).into()
     }
 
     /// Given a line (an array of points), returns the total line distance.
@@ -388,11 +358,11 @@ impl CheapRuler {
             let mut t = 0.0;
             let mut x = line[i].x;
             let mut y = line[i].y;
-            let mut dx = (line[i + 1].x - x) * self.kx;
-            let mut dy = (line[i + 1].y - y) * self.ky;
+            let dx = long_diff(line[i + 1].x, x) * self.kx;
+            let dy = (line[i + 1].y - y) * self.ky;
 
             if dx != 0.0 || dy != 0.0 {
-                t = ((point.x() - x) * self.kx * dx
+                t = (long_diff(point.x(), x) * self.kx * dx
                     + (point.y() - y) * self.ky * dy)
                     / (dx * dx + dy * dy);
 
@@ -405,10 +375,7 @@ impl CheapRuler {
                 }
             }
 
-            dx = (point.x() - x) * self.kx;
-            dy = (point.y() - y) * self.ky;
-
-            let d2 = dx * dx + dy * dy;
+            let d2 = self.square_distance(&point, &point!(x: x, y: y));
 
             if d2 < min_dist {
                 min_dist = d2;
@@ -551,17 +518,21 @@ impl CheapRuler {
     /// * `p` - Point
     /// * `bbox` - Bounding box
     pub fn inside_bbox(&self, p: Point<f64>, bbox: Rect<f64>) -> bool {
-        p.x() >= bbox.min().x &&
-        p.x() <= bbox.max().x &&
         p.y() >= bbox.min().y &&
-        p.y() <= bbox.max().y
+        p.y() <= bbox.max().y &&
+        long_diff(p.x(), bbox.min().x) >= 0.0 &&
+        long_diff(p.x(), bbox.max().x) <= 0.0
     }
 }
 
 pub fn interpolate(a: &Point<f64>, b: &Point<f64>, t: f64) -> Point<f64> {
-    let dx = b.x() - a.x();
+    let dx = long_diff(b.x(), a.x());
     let dy = b.y() - a.y();
     Point::new(a.x() + dx * t, a.y() + dy * t)
+}
+
+fn long_diff(a: f64, b: f64) -> f64 {
+    remainder(a - b, 360.0)
 }
 
 /*
