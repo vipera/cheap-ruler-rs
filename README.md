@@ -7,10 +7,6 @@ very fast approximations to common geodesic measurements.
 **Note**: This project is currently a work in progress that lacks test coverage.
 Caveat emptor!
 
-This project uses slightly different forumulas to the Mapbox projects. The WGS84
-ellipsoid is used instead of the Clarke 1866 parameters (as in the FCC
-formulas). See [cheap-ruler-cpp#13] for more information on this choice.
-
 # Usage
 
 ```rust
