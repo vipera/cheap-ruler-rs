@@ -1,11 +1,11 @@
 [package]
 name = "cheap-ruler"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Marin Rukavina <marin@shinyshell.net>"]
 edition = "2018"
 
 [dependencies]
-geo = "^0.13"
+geo-types = "^0.6"
 num-traits = "^0.2"
 float_extras = "0.1.6"
 

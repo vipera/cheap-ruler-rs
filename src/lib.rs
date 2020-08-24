@@ -10,14 +10,14 @@
 //! the FCC formulas. See cheap-ruler-cpp#13 for more information.
 
 #[macro_use]
-extern crate geo;
+extern crate geo_types;
 
 #[cfg(test)]
 extern crate assert_approx_eq;
 
 use core::convert::From;
 use float_extras::f64::remainder;
-use geo::{Coordinate, LineString, Point, Polygon, Rect};
+use geo_types::{Coordinate, LineString, Point, Polygon, Rect};
 use num_traits::Num;
 use num_traits::cast::NumCast;
 use std::f64;
@@ -257,7 +257,7 @@ impl CheapRuler {
     ///
     /// ```
     /// use cheap_ruler::{CheapRuler, DistanceUnit};
-    /// use geo::LineString;
+    /// use geo_types::LineString;
     /// let cr = CheapRuler::new(50.458, DistanceUnit::Meters);
     /// let line_string: LineString<f64> = vec![
     ///     (-67.031, 50.458),
