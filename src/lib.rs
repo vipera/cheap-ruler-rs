@@ -18,8 +18,8 @@ extern crate assert_approx_eq;
 use core::convert::From;
 use float_extras::f64::remainder;
 use geo_types::{Coordinate, LineString, Point, Polygon, Rect};
-use num_traits::Num;
 use num_traits::cast::NumCast;
+use num_traits::Num;
 use std::f64;
 use std::iter;
 
@@ -57,16 +57,16 @@ impl DistanceUnit {
 
 pub struct PointOnLine<T>
 where
-    T: Num + NumCast + Copy + PartialEq + PartialOrd
+    T: Num + NumCast + Copy + PartialEq + PartialOrd,
 {
     point: Point<T>,
     index: usize,
-    t: T
+    t: T,
 }
 
 impl<T> PointOnLine<T>
 where
-    T: Num + NumCast + Copy + PartialEq + PartialOrd
+    T: Num + NumCast + Copy + PartialEq + PartialOrd,
 {
     pub fn new(point: Point<T>, index: usize, t: T) -> Self {
         Self { point, index, t }
@@ -87,7 +87,7 @@ where
 
 impl<T> From<(Point<T>, usize, T)> for PointOnLine<T>
 where
-    T: Num + NumCast + Copy + PartialEq + PartialOrd
+    T: Num + NumCast + Copy + PartialEq + PartialOrd,
 {
     fn from(tuple: (Point<T>, usize, T)) -> PointOnLine<T> {
         PointOnLine::new(tuple.0, tuple.1, tuple.2)
@@ -113,7 +113,7 @@ impl CheapRuler {
 
         // multipliers for converting longitude and latitude degrees into distance
         let kx = mul * w * coslat; // based on normal radius of curvature
-        let ky =  mul * w * w2 * (1.0 - E2); // based on meridonal radius of curvature
+        let ky = mul * w * w2 * (1.0 - E2); // based on meridonal radius of curvature
 
         Self { kx, ky }
     }
@@ -136,8 +136,8 @@ impl CheapRuler {
     pub fn from_tile(y: u32, z: u32, distance_unit: DistanceUnit) -> Self {
         assert!(z < 32);
 
-        let n = f64::consts::PI * (1.0 - 2.0 * (y as f64 + 0.5) /
-            ((1u32 << z) as f64));
+        let n = f64::consts::PI
+            * (1.0 - 2.0 * (y as f64 + 0.5) / ((1u32 << z) as f64));
         let latitude = n.sinh().atan() / RAD;
 
         Self::new(latitude, distance_unit)
@@ -406,7 +406,9 @@ impl CheapRuler {
         let mut pol1 = self.point_on_line(line, start);
         let mut pol2 = self.point_on_line(line, stop);
 
-        if pol1.index() > pol2.index() || pol1.index() == pol2.index() && pol1.t() > pol2.t() {
+        if pol1.index() > pol2.index()
+            || pol1.index() == pol2.index() && pol1.t() > pol2.t()
+        {
             let tmp = pol1;
             pol1 = pol2;
             pol2 = tmp;
@@ -453,7 +455,7 @@ impl CheapRuler {
             return slice.into();
         }
 
-        for i in 0 .. line.num_coords() - 1 {
+        for i in 0..line.num_coords() - 1 {
             let p0 = line[i].into();
             let p1 = line[i + 1].into();
             let d = self.distance(&p0, &p1);
@@ -489,8 +491,14 @@ impl CheapRuler {
         let h = buffer / self.kx;
 
         Rect::new(
-            Coordinate { x: p.x() - h, y: p.y() - v },
-            Coordinate { x: p.x() + h, y: p.y() + v }
+            Coordinate {
+                x: p.x() - h,
+                y: p.y() - v,
+            },
+            Coordinate {
+                x: p.x() + h,
+                y: p.y() + v,
+            },
         )
     }
 
@@ -505,8 +513,14 @@ impl CheapRuler {
         let h = buffer / self.kx;
 
         Rect::new(
-            Coordinate { x: bbox.min().x - h, y: bbox.min().y - v },
-            Coordinate { x: bbox.max().x + h, y: bbox.max().y + v }
+            Coordinate {
+                x: bbox.min().x - h,
+                y: bbox.min().y - v,
+            },
+            Coordinate {
+                x: bbox.max().x + h,
+                y: bbox.max().y + v,
+            },
         )
     }
 
@@ -518,10 +532,10 @@ impl CheapRuler {
     /// * `p` - Point
     /// * `bbox` - Bounding box
     pub fn inside_bbox(&self, p: Point<f64>, bbox: Rect<f64>) -> bool {
-        p.y() >= bbox.min().y &&
-        p.y() <= bbox.max().y &&
-        long_diff(p.x(), bbox.min().x) >= 0.0 &&
-        long_diff(p.x(), bbox.max().x) <= 0.0
+        p.y() >= bbox.min().y
+            && p.y() <= bbox.max().y
+            && long_diff(p.x(), bbox.min().x) >= 0.0
+            && long_diff(p.x(), bbox.max().x) <= 0.0
     }
 }
 
