@@ -22,6 +22,7 @@ use num_traits::cast::NumCast;
 use num_traits::Num;
 use std::f64;
 use std::iter;
+use std::mem;
 
 const RE: f64 = 6378.137; // equatorial radius in km
 const FE: f64 = 1.0 / 298.257223563; // flattening
@@ -270,16 +271,13 @@ impl CheapRuler {
     pub fn line_distance(&self, points: &LineString<f64>) -> f64 {
         let line_iter = points.to_owned().into_iter();
 
-        let left =
-            iter::once(None).chain(line_iter.clone().into_iter().map(Some));
-        let total = left
-            .zip(line_iter)
+        let left = iter::once(None).chain(line_iter.clone().map(Some));
+        left.zip(line_iter)
             .map(|(a, b)| match a {
                 Some(a) => self.distance(&a.into(), &b.into()),
                 None => 0.0,
             })
-            .sum();
-        total
+            .sum()
     }
 
     /// Given a polygon (an array of rings, where each ring is an array of
@@ -409,9 +407,7 @@ impl CheapRuler {
         if pol1.index() > pol2.index()
             || pol1.index() == pol2.index() && pol1.t() > pol2.t()
         {
-            let tmp = pol1;
-            pol1 = pol2;
-            pol2 = tmp;
+            mem::swap(&mut pol1, &mut pol2);
         }
 
         let mut slice = vec![pol1.point()];
