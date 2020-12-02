@@ -1,6 +1,9 @@
 [package]
 name = "cheap-ruler"
-version = "0.0.4"
+version = "0.1.0"
+description = "A Rust port of cheap-ruler, a collection of very fast approximations to common geodesic measurements"
+license-file = "LICENSE"
+repository = "https://github.com/vipera/cheap-ruler-rs/"
 authors = ["Marin Rukavina <marin@shinyshell.net>"]
 edition = "2018"
 
