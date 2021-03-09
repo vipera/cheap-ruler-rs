@@ -12,7 +12,6 @@
 #[macro_use]
 extern crate geo_types;
 
-use float_extras::f64::remainder;
 use geo_types::{Coordinate, LineString, Point, Polygon};
 use std::f64;
 use std::iter;
@@ -577,7 +576,11 @@ fn calculate_multipliers(
 }
 
 fn long_diff(a: f64, b: f64) -> f64 {
-    remainder(a - b, 360.0)
+    let mut diff = a - b;
+    while diff > 180. {
+        diff -= 360.;
+    }
+    diff
 }
 
 fn sum_area(line: &[Point<f64>]) -> f64 {

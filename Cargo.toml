@@ -10,7 +10,6 @@ edition = "2018"
 [dependencies]
 geo-types = "^0.7"
 num-traits = "^0.2"
-float_extras = "0.1.6"
 
 [dev-dependencies]
 lazy_static = "1.4"
