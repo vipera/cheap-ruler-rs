@@ -575,11 +575,8 @@ fn calculate_multipliers(
 }
 
 fn long_diff(a: f64, b: f64) -> f64 {
-    let mut diff = a - b;
-    while diff > 180. {
-        diff -= 360.;
-    }
-    diff
+    let diff = a - b;
+    diff - ((diff / 360.).round() * 360.)
 }
 
 fn sum_area(line: &[Point<f64>]) -> f64 {
