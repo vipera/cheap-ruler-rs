@@ -24,7 +24,6 @@ pub use rect::Rect;
 const RE: f64 = 6378.137; // equatorial radius in km
 const FE: f64 = 1.0 / 298.257223563; // flattening
 const E2: f64 = FE * (2.0 - FE);
-const RAD: f64 = f64::consts::PI / 180.0;
 
 /// A collection of very fast approximations to common geodesic measurements.
 /// Useful for performance-sensitive code that measures things on a city scale.
@@ -41,7 +40,7 @@ pub struct CheapRuler {
 impl CheapRuler {
     pub fn new(latitude: f64, distance_unit: DistanceUnit) -> Self {
         // Curvature formulas from https://en.wikipedia.org/wiki/Earth_radius#Meridional
-        let coslat = (latitude * RAD).cos();
+        let coslat = latitude.to_radians().cos();
         let w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
         let w = w2.sqrt();
 
@@ -80,7 +79,7 @@ impl CheapRuler {
 
         let n = f64::consts::PI
             * (1.0 - 2.0 * (y as f64 + 0.5) / ((1u32 << z) as f64));
-        let latitude = n.sinh().atan() / RAD;
+        let latitude = n.sinh().atan().to_degrees();
 
         Self::new(latitude, distance_unit)
     }
@@ -128,7 +127,7 @@ impl CheapRuler {
     pub fn square_distance(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
         let dx = long_diff(a.lng(), b.lng()) * self.kx;
         let dy = (a.lat() - b.lat()) * self.ky;
-        dx * dx + dy * dy
+        dx.powi(2) + dy.powi(2)
     }
 
     /// Calculates the approximate distance between two geographical points
@@ -175,7 +174,7 @@ impl CheapRuler {
         let dx = long_diff(b.lng(), a.lng()) * self.kx;
         let dy = (b.lat() - a.lat()) * self.ky;
 
-        dx.atan2(dy) / RAD
+        dx.atan2(dy).to_degrees()
     }
 
     /// Returns a new point given distance and bearing from the starting point
@@ -206,7 +205,7 @@ impl CheapRuler {
         dist: f64,
         bearing: f64,
     ) -> Point<f64> {
-        let a = bearing * RAD;
+        let a = bearing.to_radians();
         self.offset(origin, a.sin() * dist, a.cos() * dist)
     }
 
@@ -569,7 +568,7 @@ fn calculate_multipliers(
     dkx: f64,
     dky: f64,
 ) -> (f64, f64) {
-    let mul = distance_unit.conversion_factor_kilometers() * RAD * RE;
+    let mul = distance_unit.conversion_factor_kilometers().to_radians() * RE;
     let kx = mul * dkx;
     let ky = mul * dky;
     (kx, ky)
