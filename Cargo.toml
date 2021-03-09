@@ -12,4 +12,10 @@ geo-types = "^0.7"
 num-traits = "^0.2"
 
 [dev-dependencies]
+geo = "^0.17"
 lazy_static = "1.4"
+criterion = "0.3"
+
+[[bench]]
+name = "distance_benchmark"
+harness = false
