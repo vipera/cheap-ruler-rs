@@ -1,3 +1,18 @@
+## 0.2.0 (2021-03-09)
+
+The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
+
+### Misc
+
+- **Breaking**: Update to geo-types 0.7, and API changes to go with it:
+  - `PointOnLine<T>` requires `T` to be `std::fmt::Debug` as that trait is
+    required by the underlying `geo_types::Point<T>` type.
+  - `Rect<T>` is now implemented only for `geo_types::CoordNum`, not
+    `geo_types::CoordinateType`. `geo_types::CoordinateType` is deprecated by
+    geo-types.
+- Remove dependency on float_extras. Remainder calculation for point wrapping is
+  implemented with IEEE 754 formula.
+
 ## 0.1.0 (2020-12-02)
 
 ### New features
