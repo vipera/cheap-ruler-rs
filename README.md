@@ -79,6 +79,15 @@ fn main() {
 }
 ```
 
+# Changelog
+
+See the [CHANGELOG](CHANGELOG.md) file for details.
+
+# License
+
+This library is licensed under the ISC License. See the [LICENSE](LICENSE) file
+for the full license content.
+
 # TODO
 
 * Use idiomatic Rust for methods that follow C++ conventions.
