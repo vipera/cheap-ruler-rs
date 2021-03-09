@@ -8,7 +8,7 @@ authors = ["Marin Rukavina <marin@shinyshell.net>"]
 edition = "2018"
 
 [dependencies]
-geo-types = "^0.6"
+geo-types = "^0.7"
 num-traits = "^0.2"
 float_extras = "0.1.6"
 

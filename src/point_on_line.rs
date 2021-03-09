@@ -1,10 +1,11 @@
 use geo_types::Point;
 use num_traits::cast::NumCast;
 use num_traits::Num;
+use std::fmt;
 
 pub struct PointOnLine<T>
 where
-    T: Num + NumCast + Copy + PartialEq + PartialOrd,
+    T: Num + NumCast + Copy + PartialEq + PartialOrd + fmt::Debug,
 {
     point: Point<T>,
     index: usize,
@@ -13,7 +14,7 @@ where
 
 impl<T> PointOnLine<T>
 where
-    T: Num + NumCast + Copy + PartialEq + PartialOrd,
+    T: Num + NumCast + Copy + PartialEq + PartialOrd + fmt::Debug,
 {
     pub fn new(point: Point<T>, index: usize, t: T) -> Self {
         Self { point, index, t }

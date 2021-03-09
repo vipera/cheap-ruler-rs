@@ -1,16 +1,16 @@
-use geo_types::{Coordinate, CoordinateType};
+use geo_types::{CoordNum, Coordinate};
 use std::borrow::Borrow;
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug, Hash)]
 pub struct Rect<T>
 where
-    T: CoordinateType,
+    T: CoordNum,
 {
     min: Coordinate<T>,
     max: Coordinate<T>,
 }
 
-impl<T: CoordinateType> Rect<T> {
+impl<T: CoordNum> Rect<T> {
     pub fn new<C>(c1: C, c2: C) -> Self
     where
         C: Into<Coordinate<T>>,
@@ -31,7 +31,7 @@ impl<T: CoordinateType> Rect<T> {
 
 impl<C, G> From<G> for Rect<C>
 where
-    C: CoordinateType,
+    C: CoordNum,
     G: Borrow<geo_types::Rect<C>>,
 {
     fn from(geo_rect: G) -> Self {

@@ -283,7 +283,7 @@ impl CheapRuler {
         line: &LineString<f64>,
         dist: f64,
     ) -> Option<Point<f64>> {
-        let line_len = line.num_coords();
+        let line_len = line.0.len();
         if line_len == 0 {
             return None;
         }
@@ -360,7 +360,7 @@ impl CheapRuler {
         let mut min_i = 0;
         let mut min_t = 0.0;
 
-        let line_len = line.num_coords();
+        let line_len = line.0.len();
         if line_len == 0 {
             return None;
         }
@@ -470,11 +470,12 @@ impl CheapRuler {
         let mut sum = 0.0;
         let mut slice = vec![];
 
-        if line.num_coords() == 0 {
+        let line_len = line.0.len();
+        if line_len == 0 {
             return slice.into();
         }
 
-        for i in 0..line.num_coords() - 1 {
+        for i in 0..line_len - 1 {
             let p0 = line[i].into();
             let p1 = line[i + 1].into();
             let d = self.distance(&p0, &p1);
