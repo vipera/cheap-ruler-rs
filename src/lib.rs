@@ -13,7 +13,9 @@
 extern crate geo_types;
 
 use geo_types::{Coordinate, LineString, Point, Polygon};
+use num_traits::Float;
 use std::f64;
+use std::fmt;
 use std::iter;
 use std::mem;
 
@@ -29,24 +31,33 @@ const E2: f64 = FE * (2.0 - FE);
 /// Useful for performance-sensitive code that measures things on a city scale.
 /// Point coordinates are in the [x = longitude, y = latitude] form.
 #[derive(Debug, PartialEq, Clone)]
-pub struct CheapRuler {
-    kx: f64,
-    ky: f64,
-    dkx: f64,
-    dky: f64,
+pub struct CheapRuler<T>
+where
+    T: Float + fmt::Debug,
+{
+    kx: T,
+    ky: T,
+    dkx: T,
+    dky: T,
     distance_unit: DistanceUnit,
 }
 
-impl CheapRuler {
-    pub fn new(latitude: f64, distance_unit: DistanceUnit) -> Self {
+impl<T> CheapRuler<T>
+where
+    T: Float + fmt::Debug,
+{
+    pub fn new(latitude: T, distance_unit: DistanceUnit) -> Self {
+        let one = T::one();
+        let e2 = T::from(E2).unwrap();
+
         // Curvature formulas from https://en.wikipedia.org/wiki/Earth_radius#Meridional
         let coslat = latitude.to_radians().cos();
-        let w2 = 1.0 / (1.0 - E2 * (1.0 - coslat * coslat));
+        let w2 = one / (one - e2 * (one - coslat * coslat));
         let w = w2.sqrt();
 
         // multipliers for converting longitude and latitude degrees into distance
         let dkx = w * coslat; // based on normal radius of curvature
-        let dky = w * w2 * (1.0 - E2); // based on meridonal radius of curvature
+        let dky = w * w2 * (one - e2); // based on meridonal radius of curvature
 
         let (kx, ky) = calculate_multipliers(distance_unit, dkx, dky);
 
@@ -72,13 +83,16 @@ impl CheapRuler {
     ///
     /// ```
     /// use cheap_ruler::{CheapRuler, DistanceUnit};
-    /// let cr = CheapRuler::from_tile(1567, 12, DistanceUnit::Meters);
+    /// let cr = CheapRuler::<f64>::from_tile(1567, 12, DistanceUnit::Meters);
     /// ```
     pub fn from_tile(y: u32, z: u32, distance_unit: DistanceUnit) -> Self {
         assert!(z < 32);
 
-        let n = f64::consts::PI
-            * (1.0 - 2.0 * (y as f64 + 0.5) / ((1u32 << z) as f64));
+        let n = T::from(f64::consts::PI).unwrap()
+            * (T::one()
+                - T::from(2.0).unwrap()
+                    * (T::from(y).unwrap() + T::from(0.5).unwrap())
+                    / T::from(1u32 << z).unwrap());
         let latitude = n.sinh().atan().to_degrees();
 
         Self::new(latitude, distance_unit)
@@ -124,7 +138,7 @@ impl CheapRuler {
     ///
     /// * `a` - First point
     /// * `b` - Second point
-    pub fn square_distance(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
+    pub fn square_distance(&self, a: &Point<T>, b: &Point<T>) -> T {
         let dx = long_diff(a.lng(), b.lng()) * self.kx;
         let dy = (a.lat() - b.lat()) * self.ky;
         dx.powi(2) + dy.powi(2)
@@ -148,7 +162,7 @@ impl CheapRuler {
     /// );
     /// assert!(dist < 38.0);
     /// ```
-    pub fn distance(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
+    pub fn distance(&self, a: &Point<T>, b: &Point<T>) -> T {
         self.square_distance(a, b).sqrt()
     }
 
@@ -170,7 +184,7 @@ impl CheapRuler {
     /// );
     /// assert_eq!(bearing, 90.0);
     /// ```
-    pub fn bearing(&self, a: &Point<f64>, b: &Point<f64>) -> f64 {
+    pub fn bearing(&self, a: &Point<T>, b: &Point<T>) -> T {
         let dx = long_diff(b.lng(), a.lng()) * self.kx;
         let dy = (b.lat() - a.lat()) * self.ky;
 
@@ -201,10 +215,10 @@ impl CheapRuler {
     /// ```
     pub fn destination(
         &self,
-        origin: &Point<f64>,
-        dist: f64,
-        bearing: f64,
-    ) -> Point<f64> {
+        origin: &Point<T>,
+        dist: T,
+        bearing: T,
+    ) -> Point<T> {
         let a = bearing.to_radians();
         self.offset(origin, a.sin() * dist, a.cos() * dist)
     }
@@ -217,7 +231,7 @@ impl CheapRuler {
     /// * `origin` - point
     /// * `dx` - easting
     /// * `dy` - northing
-    pub fn offset(&self, origin: &Point<f64>, dx: f64, dy: f64) -> Point<f64> {
+    pub fn offset(&self, origin: &Point<T>, dx: T, dy: T) -> Point<T> {
         (origin.lng() + dx / self.kx, origin.lat() + dy / self.ky).into()
     }
 
@@ -241,33 +255,33 @@ impl CheapRuler {
     /// ].into();
     /// let length = cr.line_distance(&line_string);
     /// ```
-    pub fn line_distance(&self, points: &LineString<f64>) -> f64 {
+    pub fn line_distance(&self, points: &LineString<T>) -> T {
         let line_iter = points.to_owned().into_iter();
 
         let left = iter::once(None).chain(line_iter.clone().map(Some));
         left.zip(line_iter)
             .map(|(a, b)| match a {
                 Some(a) => self.distance(&a.into(), &b.into()),
-                None => 0.0,
+                None => T::zero(),
             })
-            .sum()
+            // avoided using Iterator's sum() so that we don't have to require T
+            // to implement std::iter::Sum.
+            .fold(T::zero(), |acc, x| acc + x)
     }
 
     /// Given a polygon returns the area
     ///
     /// * `polygon` - Polygon
-    pub fn area(&self, polygon: &Polygon<f64>) -> f64 {
+    pub fn area(&self, polygon: &Polygon<T>) -> T {
         // FIXME: subtract interiors
-        let exterior = polygon
-            .exterior()
-            .points_iter()
-            .collect::<Vec<Point<f64>>>();
+        let exterior =
+            polygon.exterior().points_iter().collect::<Vec<Point<T>>>();
         let mut sum = sum_area(&exterior);
         for interior in polygon.interiors() {
-            let interior = interior.points_iter().collect::<Vec<Point<f64>>>();
-            sum -= sum_area(&interior);
+            let interior = interior.points_iter().collect::<Vec<Point<T>>>();
+            sum = sum - sum_area(&interior);
         }
-        (sum.abs() / 2.0) * self.kx * self.ky
+        (sum.abs() / T::from(2.0).unwrap()) * self.kx * self.ky
     }
 
     /// Returns the point at a specified distance along the line
@@ -276,27 +290,23 @@ impl CheapRuler {
     ///
     /// * `line` - Line
     /// * `dist` - Distance along the line
-    pub fn along(
-        &self,
-        line: &LineString<f64>,
-        dist: f64,
-    ) -> Option<Point<f64>> {
+    pub fn along(&self, line: &LineString<T>, dist: T) -> Option<Point<T>> {
         let line_len = line.0.len();
         if line_len == 0 {
             return None;
         }
 
-        if dist <= 0.0 {
+        if dist <= T::zero() {
             return Some(line[0].into());
         }
 
         let last_index = line_len - 1;
-        let mut sum = 0.0;
+        let mut sum = T::zero();
         for i in 0..last_index {
             let p0 = &line[i].into();
             let p1 = &line[i + 1].into();
             let d = self.distance(p0, p1);
-            sum += d;
+            sum = sum + d;
             if sum > dist {
                 return Some(interpolate(p0, p1, (dist - (sum - d)) / d));
             }
@@ -314,25 +324,26 @@ impl CheapRuler {
     /// * `end` - End point of line segment
     pub fn point_to_segment_distance(
         &self,
-        p: &Point<f64>,
-        start: &Point<f64>,
-        end: &Point<f64>,
-    ) -> f64 {
+        p: &Point<T>,
+        start: &Point<T>,
+        end: &Point<T>,
+    ) -> T {
+        let zero = T::zero();
         let mut x = start.lng();
         let mut y = start.lat();
         let dx = long_diff(end.lng(), x) * self.kx;
         let dy = (end.lat() - y) * self.ky;
 
-        if dx != 0.0 || dy != 0.0 {
+        if dx != zero || dy != zero {
             let t = (long_diff(p.lng(), x) * self.kx * dx
                 + (p.lat() - y) * self.ky * dy)
                 / (dx * dx + dy * dy);
-            if t > 1.0 {
+            if t > T::one() {
                 x = end.lng();
                 y = end.lat();
-            } else if t > 0.0 {
-                x += (dx / self.kx) * t;
-                y += (dy / self.ky) * t;
+            } else if t > zero {
+                x = x + (dx / self.kx) * t;
+                y = y + (dy / self.ky) * t;
             }
         }
         self.distance(&p, &point!(x: x, y: y))
@@ -349,14 +360,15 @@ impl CheapRuler {
     /// * `point` - Point to calculate the closest point on the line
     pub fn point_on_line(
         &self,
-        line: &LineString<f64>,
-        point: &Point<f64>,
-    ) -> Option<PointOnLine<f64>> {
-        let mut min_dist = f64::INFINITY;
-        let mut min_x = 0.0;
-        let mut min_y = 0.0;
+        line: &LineString<T>,
+        point: &Point<T>,
+    ) -> Option<PointOnLine<T>> {
+        let zero = T::zero();
+        let mut min_dist = T::infinity();
+        let mut min_x = zero;
+        let mut min_y = zero;
         let mut min_i = 0;
-        let mut min_t = 0.0;
+        let mut min_t = zero;
 
         let line_len = line.0.len();
         if line_len == 0 {
@@ -364,23 +376,23 @@ impl CheapRuler {
         }
 
         for i in 0..line_len - 1 {
-            let mut t = 0.0;
+            let mut t = zero;
             let mut x = line[i].x;
             let mut y = line[i].y;
             let dx = long_diff(line[i + 1].x, x) * self.kx;
             let dy = (line[i + 1].y - y) * self.ky;
 
-            if dx != 0.0 || dy != 0.0 {
+            if dx != zero || dy != zero {
                 t = (long_diff(point.lng(), x) * self.kx * dx
                     + (point.lat() - y) * self.ky * dy)
                     / (dx * dx + dy * dy);
 
-                if t > 1.0 {
+                if t > T::one() {
                     x = line[i + 1].x;
                     y = line[i + 1].y;
-                } else if t > 0.0 {
-                    x += (dx / self.kx) * t;
-                    y += (dy / self.ky) * t;
+                } else if t > zero {
+                    x = x + (dx / self.kx) * t;
+                    y = y + (dy / self.ky) * t;
                 }
             }
 
@@ -398,7 +410,7 @@ impl CheapRuler {
         Some(PointOnLine::new(
             point!(x: min_x, y: min_y),
             min_i,
-            0f64.max(1f64.min(min_t)),
+            T::zero().max(T::one().min(min_t)),
         ))
     }
 
@@ -412,10 +424,10 @@ impl CheapRuler {
     /// * `line` - Line string
     pub fn line_slice(
         &self,
-        start: &Point<f64>,
-        stop: &Point<f64>,
-        line: &LineString<f64>,
-    ) -> LineString<f64> {
+        start: &Point<T>,
+        stop: &Point<T>,
+        line: &LineString<T>,
+    ) -> LineString<T> {
         let pol1 = self.point_on_line(line, start);
         let pol2 = self.point_on_line(line, stop);
 
@@ -461,11 +473,11 @@ impl CheapRuler {
     /// * `line` - Line string
     pub fn line_slice_along(
         &self,
-        start: f64,
-        stop: f64,
-        line: &LineString<f64>,
-    ) -> LineString<f64> {
-        let mut sum = 0.0;
+        start: T,
+        stop: T,
+        line: &LineString<T>,
+    ) -> LineString<T> {
+        let mut sum = T::zero();
         let mut slice = vec![];
 
         let line_len = line.0.len();
@@ -478,7 +490,7 @@ impl CheapRuler {
             let p1 = line[i + 1].into();
             let d = self.distance(&p0, &p1);
 
-            sum += d;
+            sum = sum + d;
 
             if sum > start && slice.is_empty() {
                 slice.push(interpolate(&p0, &p1, (start - (sum - d)) / d));
@@ -504,7 +516,7 @@ impl CheapRuler {
     ///
     /// * `p` - Point
     /// * `buffer` - Buffer distance
-    pub fn buffer_point(&self, p: &Point<f64>, buffer: f64) -> Rect<f64> {
+    pub fn buffer_point(&self, p: &Point<T>, buffer: T) -> Rect<T> {
         let v = buffer / self.ky;
         let h = buffer / self.kx;
 
@@ -526,7 +538,7 @@ impl CheapRuler {
     ///
     /// * `bbox` - Bounding box
     /// * `buffer` - Buffer distance
-    pub fn buffer_bbox(&self, bbox: &Rect<f64>, buffer: f64) -> Rect<f64> {
+    pub fn buffer_bbox(&self, bbox: &Rect<T>, buffer: T) -> Rect<T> {
         let v = buffer / self.ky;
         let h = buffer / self.kx;
 
@@ -549,43 +561,52 @@ impl CheapRuler {
     ///
     /// * `p` - Point
     /// * `bbox` - Bounding box
-    pub fn inside_bbox(&self, p: &Point<f64>, bbox: &Rect<f64>) -> bool {
+    pub fn inside_bbox(&self, p: &Point<T>, bbox: &Rect<T>) -> bool {
         p.lat() >= bbox.min().y
             && p.lat() <= bbox.max().y
-            && long_diff(p.lng(), bbox.min().x) >= 0.0
-            && long_diff(p.lng(), bbox.max().x) <= 0.0
+            && long_diff(p.lng(), bbox.min().x) >= T::zero()
+            && long_diff(p.lng(), bbox.max().x) <= T::zero()
     }
 }
 
-pub fn interpolate(a: &Point<f64>, b: &Point<f64>, t: f64) -> Point<f64> {
+pub fn interpolate<T: Float + fmt::Debug>(
+    a: &Point<T>,
+    b: &Point<T>,
+    t: T,
+) -> Point<T> {
     let dx = long_diff(b.lng(), a.lng());
     let dy = b.lat() - a.lat();
     Point::new(a.lng() + dx * t, a.lat() + dy * t)
 }
 
-fn calculate_multipliers(
+fn calculate_multipliers<T: Float>(
     distance_unit: DistanceUnit,
-    dkx: f64,
-    dky: f64,
-) -> (f64, f64) {
-    let mul = distance_unit.conversion_factor_kilometers().to_radians() * RE;
+    dkx: T,
+    dky: T,
+) -> (T, T) {
+    let re = T::from(RE).unwrap();
+    let mul = distance_unit
+        .conversion_factor_kilometers::<T>()
+        .to_radians()
+        * re;
     let kx = mul * dkx;
     let ky = mul * dky;
     (kx, ky)
 }
 
-fn long_diff(a: f64, b: f64) -> f64 {
+fn long_diff<T: Float>(a: T, b: T) -> T {
+    let threesixty = T::from(360).unwrap();
     let diff = a - b;
-    diff - ((diff / 360.).round() * 360.)
+    diff - ((diff / threesixty).round() * threesixty)
 }
 
-fn sum_area(line: &[Point<f64>]) -> f64 {
+fn sum_area<T: Float + fmt::Debug>(line: &[Point<T>]) -> T {
     let line_len = line.len();
-    let mut sum = 0.0;
+    let mut sum = T::zero();
     let mut k = line_len - 1;
     for j in 0..line_len {
-        sum +=
-            (line[j].lng() - line[k].lng()) * (line[j].lat() + line[k].lat());
+        sum = sum
+            + (line[j].lng() - line[k].lng()) * (line[j].lat() + line[k].lat());
         k = j;
     }
     sum
