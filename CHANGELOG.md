@@ -1,3 +1,20 @@
+## 0.3.0 (2021-03-17)
+
+The 0.3.0 release is a breaking change that makes the entire API type generic,
+using num_traits::Float instead of fixed with f64.
+
+### Feature changes
+
+- The `CheapRuler` struct has been changed to `CheapRuler<T>` to use the generic
+  num_traits::Float trait for floating-point numbers instead of using f64.
+  Associated functions that previously operated with f64s have also had their
+  argument/return types changed to T.
+
+### Misc
+
+- Added a distance benchmark comparing the performance of cheap ruler's distance
+  to geo's haversine and vincenty implementations.
+
 ## 0.2.0 (2021-03-09)
 
 The 0.2 release is primarily an update from geo-types 0.6 to 0.7.

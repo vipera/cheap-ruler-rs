@@ -1,9 +1,11 @@
 [package]
 name = "cheap-ruler"
-version = "0.2.0"
+version = "0.3.0"
 description = "A Rust port of cheap-ruler, a collection of very fast approximations to common geodesic measurements"
-license-file = "LICENSE"
+license = "ISC"
 repository = "https://github.com/vipera/cheap-ruler-rs/"
+homepage = "https://github.com/vipera/cheap-ruler-rs/"
+documentation = "https://docs.rs/cheap-ruler-rs/"
 authors = ["Marin Rukavina <marin@shinyshell.net>"]
 edition = "2018"
 
@@ -12,4 +14,10 @@ geo-types = "^0.7"
 num-traits = "^0.2"
 
 [dev-dependencies]
+geo = "^0.17"
 lazy_static = "1.4"
+criterion = "0.3"
+
+[[bench]]
+name = "distance_benchmark"
+harness = false

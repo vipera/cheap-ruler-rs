@@ -4,7 +4,7 @@ macro_rules! assert_eq_err {
     assert_eq_err!($actual, $expected, $max_err, "");
   }};
   ($actual:expr, $expected:expr, $max_err:expr, $note:expr) => {{
-    let (actual, expected) = (&$actual, &$expected);
+    let (actual, expected): (&f64, &f64) = (&$actual, &$expected);
     let max_err = $max_err;
     let note = $note;
     // Add a negligible fraction to make sure we

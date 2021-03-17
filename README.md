@@ -1,16 +1,17 @@
 [![GitHub Actions][actions badge]][actions]
-![GitHub License][license badge]
+[![GitHub License][license badge]][LICENSE]
 
 # cheap-ruler-rs
 
-Port to safe Rust of [Cheap Ruler](https://github.com/mapbox/cheap-ruler) and
-[Cheap Ruler C++](https://github.com/mapbox/cheap-ruler-cpp), a collection of
-very fast approximations to common geodesic measurements.
+Port to safe Rust of [cheap-ruler] and [cheap-ruler-cpp], a collection of very
+fast approximations to common geodesic measurements.
 
 The approximations are based on WGS84 and its ellipsoidal model of the Earth.
 The results of calculations are accurate to small differences of the latitude
-provided at construction, and are less computationally expensive. See Cheap
-Ruler for accuracy claims compared to Vincenty formulas.
+provided at construction, and are less computationally expensive.
+
+See [cheap-ruler]'s readme for accuracy claims compared to the Vincenty
+formulas.
 
 # Usage
 
@@ -79,19 +80,37 @@ fn main() {
 }
 ```
 
+# Benchmarks
+
+Cheap ruler's distance calculation is about 16 times faster than the [geo]
+crate's haversine algorithm implementation (times below are from a machine with
+Intel Core i7-8550U).
+
+```
+distance/cheap_ruler    time:   [291.10 ps 292.38 ps 293.89 ps]
+distance/haversine      time:   [4.7215 ns 4.8545 ns 5.0086 ns]
+distance/vincenty       time:   [315.83 ns 320.75 ns 325.93 ns]
+```
+
 # Changelog
 
-See the [CHANGELOG](CHANGELOG.md) file for details.
+See the [CHANGELOG] file for details.
 
 # License
 
-This library is licensed under the ISC License. See the [LICENSE](LICENSE) file
-for the full license content.
+This library is licensed under the ISC License. See the [LICENSE] file for the
+full license content.
 
 # TODO
 
 * Use idiomatic Rust for methods that follow C++ conventions.
-* Benchmarks
+
+<!-- References -->
+[cheap-ruler]: https://github.com/mapbox/cheap-ruler
+[cheap-ruler-cpp]: https://github.com/mapbox/cheap-ruler-cpp
+[geo]: https://github.com/georust/geo
+[LICENSE]: LICENSE
+[CHANGELOG]: CHANGELOG.md
 
 <!-- Badges -->
 [actions badge]: https://img.shields.io/github/workflow/status/vipera/cheap-ruler-rs/CI?style=flat-square
