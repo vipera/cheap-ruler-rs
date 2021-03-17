@@ -19,5 +19,5 @@ lazy_static = "1.4"
 criterion = "0.3"
 
 [[bench]]
-name = "distance_benchmark"
+name = "geo"
 harness = false

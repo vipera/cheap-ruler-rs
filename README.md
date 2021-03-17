@@ -83,13 +83,21 @@ fn main() {
 # Benchmarks
 
 Cheap ruler's distance calculation is about 16 times faster than the [geo]
-crate's haversine algorithm implementation (times below are from a machine with
-Intel Core i7-8550U).
+crate's haversine algorithm implementation. Bearing calculation is on par with
+geo's implementation, and destination is over 3 times faster.
+
+Times below are from a machine with Intel Core i7-8550U.
 
 ```
 distance/cheap_ruler    time:   [291.10 ps 292.38 ps 293.89 ps]
 distance/haversine      time:   [4.7215 ns 4.8545 ns 5.0086 ns]
 distance/vincenty       time:   [315.83 ns 320.75 ns 325.93 ns]
+
+bearing/cheap_ruler     time:   [16.201 ns 16.239 ns 16.281 ns]
+bearing/geo             time:   [16.523 ns 16.576 ns 16.629 ns]
+
+destination/cheap_ruler time:   [24.984 ns 25.183 ns 25.471 ns]
+destination/haversine   time:   [82.251 ns 82.670 ns 83.169 ns]
 ```
 
 # Changelog
