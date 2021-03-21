@@ -162,6 +162,47 @@ fn test_area() {
 }
 
 #[test]
+fn test_area_subtractions() {
+    let ruler = fixtures::ruler_km();
+    let zone_outer = line_string![
+        (x: 71.329356, y: -6.19387),
+        (x: 71.353358, y: -6.172451),
+        (x: 71.368091, y: -6.172537),
+        (x: 71.401737, y: -6.189896),
+        (x: 71.301494, y: -6.31167),
+        (x: 71.276782, y: -6.293861),
+        (x: 71.295337, y: -6.242543),
+        (x: 71.305667, y: -6.223857),
+    ];
+    let zone_inner = line_string![
+        (x: 71.331072, y: -6.217463),
+        (x: 71.358165, y: -6.204493),
+        (x: 71.351612, y: -6.227702),
+        (x: 71.334102, y: -6.249496),
+        (x: 71.316666, y: -6.26014),
+        (x: 71.319829, y: -6.235973),
+    ];
+
+    // measurea area of polygon
+    let polygon = Polygon::new(zone_outer.clone(), vec![]);
+    let expected = 75.3123;
+    let actual = ruler.area(&polygon);
+    assert_eq_err!(expected, actual, 0.003);
+
+    // measure area of exclusion polygon
+    let polygon_exclusion = Polygon::new(zone_inner.clone(), vec![]);
+    let expected_exclusion = 10.2519;
+    let actual_exclusion = ruler.area(&polygon_exclusion);
+    assert_eq_err!(expected_exclusion, actual_exclusion, 0.003);
+
+    // measure area of polygon with excluded part
+    let polygon_subtracted = Polygon::new(zone_outer, vec![zone_inner]);
+    let expected_subtracted = expected - expected_exclusion;
+    let actual_subtracted = ruler.area(&polygon_subtracted);
+    assert_eq_err!(expected_subtracted, actual_subtracted, 0.003);
+}
+
+#[test]
 fn test_along() {
     let ruler = fixtures::ruler_km();
 

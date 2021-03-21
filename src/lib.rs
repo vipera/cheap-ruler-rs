@@ -273,14 +273,17 @@ where
     ///
     /// * `polygon` - Polygon
     pub fn area(&self, polygon: &Polygon<T>) -> T {
-        // FIXME: subtract interiors
-        let exterior =
-            polygon.exterior().points_iter().collect::<Vec<Point<T>>>();
-        let mut sum = sum_area(&exterior);
-        for interior in polygon.interiors() {
-            let interior = interior.points_iter().collect::<Vec<Point<T>>>();
-            sum = sum - sum_area(&interior);
-        }
+        let exterior_sum = sum_area(
+            &polygon.exterior().points_iter().collect::<Vec<Point<T>>>(),
+        );
+        let interiors_sum = polygon
+            .interiors()
+            .iter()
+            .map(|interior| {
+                sum_area(&interior.points_iter().collect::<Vec<Point<T>>>())
+            })
+            .fold(T::zero(), |acc, x| acc + x);
+        let sum = exterior_sum - interiors_sum;
         (sum.abs() / T::from(2.0).unwrap()) * self.kx * self.ky
     }
 
