@@ -86,12 +86,12 @@ The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
 ### Bug fixes
 
 - Fix incorrect calculations for points that cross the international date line.
-  See mapbox/cheap-ruler-cpp#12 for details.
+  See [mapbox/cheap-ruler-cpp#12] for details.
 
 ### Misc
 
 - Internally use WGS84 ellipsoid model for calculations instead of the FCC
-  formulas. See mapbox/cheap-ruler-cpp#13 for details.
+  formulas. See [mapbox/cheap-ruler-cpp#13] for details.
 
 
 ## 0.0.2 (2020-04-26)
@@ -99,3 +99,8 @@ The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
 ### Feature changes
 
 - Rename Unit struct to DistanceUnit for clarity.
+
+
+<!-- References -->
+[mapbox/cheap-ruler-cpp#12]: https://github.com/mapbox/cheap-ruler/pull/12
+[mapbox/cheap-ruler-cpp#13]: https://github.com/mapbox/cheap-ruler/pull/13
