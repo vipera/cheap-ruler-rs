@@ -15,6 +15,7 @@ using num_traits::Float instead of fixed with f64.
 - Added a distance benchmark comparing the performance of cheap ruler's distance
   to geo's haversine and vincenty implementations.
 
+
 ## 0.2.0 (2021-03-09)
 
 The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
@@ -29,6 +30,7 @@ The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
     geo-types.
 - Remove dependency on float_extras. Remainder calculation for point wrapping is
   implemented with IEEE 754 formula.
+
 
 ## 0.1.0 (2020-12-02)
 
@@ -100,6 +102,11 @@ The 0.2 release is primarily an update from geo-types 0.6 to 0.7.
 
 - Rename Unit struct to DistanceUnit for clarity.
 
+## 0.0.1 (2020-04-07)
+
+### New features
+
+- Cheap ruler implementation with selectable distance unit.
 
 <!-- References -->
 [mapbox/cheap-ruler-cpp#12]: https://github.com/mapbox/cheap-ruler/pull/12
