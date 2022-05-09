@@ -14,7 +14,7 @@ geo-types = "^0.7"
 num-traits = "^0.2"
 
 [dev-dependencies]
-geo = "^0.17"
+geo = "^0.20"
 lazy_static = "1.4"
 criterion = "0.3"
 
