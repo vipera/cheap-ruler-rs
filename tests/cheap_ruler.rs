@@ -110,8 +110,8 @@ fn test_destination() {
 
         let actual = ruler.destination(&POINTS[i], 1.0, bearing);
 
-        assert_eq_err!(expected.lng(), actual.lng(), 1e-6); // longitude
-        assert_eq_err!(expected.lat(), actual.lat(), 1e-6); // latitude
+        assert_eq_err!(expected.x(), actual.x(), 1e-6); // longitude
+        assert_eq_err!(expected.y(), actual.y(), 1e-6); // latitude
     }
 }
 
@@ -144,7 +144,7 @@ fn test_area() {
 
     let mut j = 0;
     for i in 0..LINES.len() {
-        if LINES[i].points_iter().count() < 3 {
+        if LINES[i].points().count() < 3 {
             continue;
         }
 
@@ -212,8 +212,8 @@ fn test_along() {
             .along(&LINES[i], turf::ALONG_DIST[i])
             .expect("Non-empty line string given");
 
-        assert_eq_err!(expected.lng(), actual.lng(), 1e-6); // along longitude
-        assert_eq_err!(expected.lat(), actual.lat(), 1e-6); // along latitude
+        assert_eq_err!(expected.x(), actual.x(), 1e-6); // along longitude
+        assert_eq_err!(expected.y(), actual.y(), 1e-6); // along latitude
     }
 }
 
@@ -243,12 +243,12 @@ fn test_along_with_dist_lt_0() {
 fn test_along_with_dist_greater_than_length() {
     let ruler = fixtures::ruler_km();
 
-    let coord = LINES[0].points_iter().last().expect("Last element");
+    let coord = LINES[0].points().last().expect("Last element");
     let actual = ruler
         .along(&LINES[0], 1000.0)
         .expect("Non-empty line string given");
 
-    assert_eq!(point!(x: coord.lng(), y: coord.lat()), actual);
+    assert_eq!(point!(x: coord.x(), y: coord.y()), actual);
 }
 
 #[test]
@@ -265,8 +265,8 @@ fn test_point_on_line() {
         .point_on_line(&line, &point)
         .expect("Non-empty line string given");
 
-    assert_eq_err!(-77.03052689033436, result.point().lng(), 1e-6);
-    assert_eq_err!(38.880457324462576, result.point().lat(), 1e-6);
+    assert_eq_err!(-77.03052689033436, result.point().x(), 1e-6);
+    assert_eq_err!(38.880457324462576, result.point().y(), 1e-6);
     assert_eq!(0, result.index()); // index
     assert_eq_err!(0.5544221677861756, result.t(), 1e-6); // t
 
@@ -381,10 +381,10 @@ fn test_buffer_point() {
         let (expected_min, expected_max) = turf::BUFFERPOINT[i];
         let actual = ruler_miles.buffer_point(&POINTS[i], 0.1);
 
-        assert_eq_err!(expected_min.lng(), actual.min().x, 2e-7);
-        assert_eq_err!(expected_min.lng(), actual.min().x, 2e-7);
-        assert_eq_err!(expected_max.lat(), actual.max().y, 2e-7);
-        assert_eq_err!(expected_max.lat(), actual.max().y, 2e-7);
+        assert_eq_err!(expected_min.x(), actual.min().x, 2e-7);
+        assert_eq_err!(expected_min.x(), actual.min().x, 2e-7);
+        assert_eq_err!(expected_max.y(), actual.max().y, 2e-7);
+        assert_eq_err!(expected_max.y(), actual.max().y, 2e-7);
     }
 }
 

@@ -139,8 +139,8 @@ where
     /// * `a` - First point
     /// * `b` - Second point
     pub fn square_distance(&self, a: &Point<T>, b: &Point<T>) -> T {
-        let dx = long_diff(a.lng(), b.lng()) * self.kx;
-        let dy = (a.lat() - b.lat()) * self.ky;
+        let dx = long_diff(a.x(), b.x()) * self.kx;
+        let dy = (a.y() - b.y()) * self.ky;
         dx.powi(2) + dy.powi(2)
     }
 
@@ -185,8 +185,8 @@ where
     /// assert_eq!(bearing, 90.0);
     /// ```
     pub fn bearing(&self, a: &Point<T>, b: &Point<T>) -> T {
-        let dx = long_diff(b.lng(), a.lng()) * self.kx;
-        let dy = (b.lat() - a.lat()) * self.ky;
+        let dx = long_diff(b.x(), a.x()) * self.kx;
+        let dy = (b.y() - a.y()) * self.ky;
 
         dx.atan2(dy).to_degrees()
     }
@@ -210,8 +210,8 @@ where
     /// let bearing = cr.bearing(&p1, &p2);
     /// let destination = cr.destination(&p1, dist, bearing);
     ///
-    /// assert_eq!(destination.lng(), p2.lng());
-    /// assert_eq!(destination.lat(), p2.lat());
+    /// assert_eq!(destination.x(), p2.x());
+    /// assert_eq!(destination.y(), p2.y());
     /// ```
     pub fn destination(
         &self,
@@ -232,7 +232,7 @@ where
     /// * `dx` - easting
     /// * `dy` - northing
     pub fn offset(&self, origin: &Point<T>, dx: T, dy: T) -> Point<T> {
-        (origin.lng() + dx / self.kx, origin.lat() + dy / self.ky).into()
+        (origin.x() + dx / self.kx, origin.y() + dy / self.ky).into()
     }
 
     /// Given a line (an array of points), returns the total line distance.
@@ -256,7 +256,7 @@ where
     /// let length = cr.line_distance(&line_string);
     /// ```
     pub fn line_distance(&self, points: &LineString<T>) -> T {
-        let line_iter = points.to_owned().into_iter();
+        let line_iter = points.0.iter().copied();
 
         let left = iter::once(None).chain(line_iter.clone().map(Some));
         left.zip(line_iter)
@@ -274,13 +274,13 @@ where
     /// * `polygon` - Polygon
     pub fn area(&self, polygon: &Polygon<T>) -> T {
         let exterior_sum = sum_area(
-            &polygon.exterior().points_iter().collect::<Vec<Point<T>>>(),
+            &polygon.exterior().points().collect::<Vec<Point<T>>>(),
         );
         let interiors_sum = polygon
             .interiors()
             .iter()
             .map(|interior| {
-                sum_area(&interior.points_iter().collect::<Vec<Point<T>>>())
+                sum_area(&interior.points().collect::<Vec<Point<T>>>())
             })
             .fold(T::zero(), |acc, x| acc + x);
         let sum = exterior_sum - interiors_sum;
@@ -332,24 +332,24 @@ where
         end: &Point<T>,
     ) -> T {
         let zero = T::zero();
-        let mut x = start.lng();
-        let mut y = start.lat();
-        let dx = long_diff(end.lng(), x) * self.kx;
-        let dy = (end.lat() - y) * self.ky;
+        let mut x = start.x();
+        let mut y = start.y();
+        let dx = long_diff(end.x(), x) * self.kx;
+        let dy = (end.y() - y) * self.ky;
 
         if dx != zero || dy != zero {
-            let t = (long_diff(p.lng(), x) * self.kx * dx
-                + (p.lat() - y) * self.ky * dy)
+            let t = (long_diff(p.x(), x) * self.kx * dx
+                + (p.y() - y) * self.ky * dy)
                 / (dx * dx + dy * dy);
             if t > T::one() {
-                x = end.lng();
-                y = end.lat();
+                x = end.x();
+                y = end.y();
             } else if t > zero {
                 x = x + (dx / self.kx) * t;
                 y = y + (dy / self.ky) * t;
             }
         }
-        self.distance(&p, &point!(x: x, y: y))
+        self.distance(p, &point!(x: x, y: y))
     }
 
     /// Returns a tuple of the form (point, index, t) where point is closest
@@ -386,8 +386,8 @@ where
             let dy = (line[i + 1].y - y) * self.ky;
 
             if dx != zero || dy != zero {
-                t = (long_diff(point.lng(), x) * self.kx * dx
-                    + (point.lat() - y) * self.ky * dy)
+                t = (long_diff(point.x(), x) * self.kx * dx
+                    + (point.y() - y) * self.ky * dy)
                     / (dx * dx + dy * dy);
 
                 if t > T::one() {
@@ -399,7 +399,7 @@ where
                 }
             }
 
-            let d2 = self.square_distance(&point, &point!(x: x, y: y));
+            let d2 = self.square_distance(point, &point!(x: x, y: y));
 
             if d2 < min_dist {
                 min_dist = d2;
@@ -525,12 +525,12 @@ where
 
         Rect::new(
             Coordinate {
-                x: p.lng() - h,
-                y: p.lat() - v,
+                x: p.x() - h,
+                y: p.y() - v,
             },
             Coordinate {
-                x: p.lng() + h,
-                y: p.lat() + v,
+                x: p.x() + h,
+                y: p.y() + v,
             },
         )
     }
@@ -565,10 +565,10 @@ where
     /// * `p` - Point
     /// * `bbox` - Bounding box
     pub fn inside_bbox(&self, p: &Point<T>, bbox: &Rect<T>) -> bool {
-        p.lat() >= bbox.min().y
-            && p.lat() <= bbox.max().y
-            && long_diff(p.lng(), bbox.min().x) >= T::zero()
-            && long_diff(p.lng(), bbox.max().x) <= T::zero()
+        p.y() >= bbox.min().y
+            && p.y() <= bbox.max().y
+            && long_diff(p.x(), bbox.min().x) >= T::zero()
+            && long_diff(p.x(), bbox.max().x) <= T::zero()
     }
 }
 
@@ -577,9 +577,9 @@ pub fn interpolate<T: Float + fmt::Debug>(
     b: &Point<T>,
     t: T,
 ) -> Point<T> {
-    let dx = long_diff(b.lng(), a.lng());
-    let dy = b.lat() - a.lat();
-    Point::new(a.lng() + dx * t, a.lat() + dy * t)
+    let dx = long_diff(b.x(), a.x());
+    let dy = b.y() - a.y();
+    Point::new(a.x() + dx * t, a.y() + dy * t)
 }
 
 fn calculate_multipliers<T: Float>(
@@ -609,7 +609,7 @@ fn sum_area<T: Float + fmt::Debug>(line: &[Point<T>]) -> T {
     let mut k = line_len - 1;
     for j in 0..line_len {
         sum = sum
-            + (line[j].lng() - line[k].lng()) * (line[j].lat() + line[k].lat());
+            + (line[j].x() - line[k].x()) * (line[j].y() + line[k].y());
         k = j;
     }
     sum
