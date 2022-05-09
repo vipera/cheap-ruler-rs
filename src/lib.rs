@@ -273,9 +273,8 @@ where
     ///
     /// * `polygon` - Polygon
     pub fn area(&self, polygon: &Polygon<T>) -> T {
-        let exterior_sum = sum_area(
-            &polygon.exterior().points().collect::<Vec<Point<T>>>(),
-        );
+        let exterior_sum =
+            sum_area(&polygon.exterior().points().collect::<Vec<Point<T>>>());
         let interiors_sum = polygon
             .interiors()
             .iter()
@@ -608,8 +607,7 @@ fn sum_area<T: Float + fmt::Debug>(line: &[Point<T>]) -> T {
     let mut sum = T::zero();
     let mut k = line_len - 1;
     for j in 0..line_len {
-        sum = sum
-            + (line[j].x() - line[k].x()) * (line[j].y() + line[k].y());
+        sum = sum + (line[j].x() - line[k].x()) * (line[j].y() + line[k].y());
         k = j;
     }
     sum
