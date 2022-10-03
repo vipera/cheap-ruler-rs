@@ -19,6 +19,10 @@ use std::fmt;
 use std::iter;
 use std::mem;
 
+mod distance_unit;
+mod point_on_line;
+mod rect;
+
 pub use distance_unit::DistanceUnit;
 pub use point_on_line::PointOnLine;
 pub use rect::Rect;
@@ -30,6 +34,7 @@ const E2: f64 = FE * (2.0 - FE);
 /// A collection of very fast approximations to common geodesic measurements.
 /// Useful for performance-sensitive code that measures things on a city scale.
 /// Point coordinates are in the [x = longitude, y = latitude] form.
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Debug, PartialEq, Clone)]
 pub struct CheapRuler<T>
 where
@@ -612,7 +617,3 @@ fn sum_area<T: Float + fmt::Debug>(line: &[Point<T>]) -> T {
     }
     sum
 }
-
-mod distance_unit;
-mod point_on_line;
-mod rect;

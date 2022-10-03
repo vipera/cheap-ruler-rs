@@ -2,10 +2,7 @@ use geo_types::{CoordNum, Coordinate};
 use std::borrow::Borrow;
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug, Hash)]
-pub struct Rect<T>
-where
-    T: CoordNum,
-{
+pub struct Rect<T: CoordNum> {
     min: Coordinate<T>,
     max: Coordinate<T>,
 }

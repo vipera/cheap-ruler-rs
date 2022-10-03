@@ -15,6 +15,12 @@ use fixtures::turf;
 use geo_types::{Coordinate, LineString, Polygon};
 
 #[test]
+fn test_get_unit() {
+    let ruler = fixtures::ruler_miles();
+    assert_eq!(ruler.distance_unit(), DistanceUnit::Miles);
+}
+
+#[test]
 fn test_change_unit() {
     let mut ruler = fixtures::ruler_km();
 
@@ -249,6 +255,16 @@ fn test_along_with_dist_greater_than_length() {
         .expect("Non-empty line string given");
 
     assert_eq!(point!(x: coord.x(), y: coord.y()), actual);
+}
+
+#[test]
+fn test_point_on_line_empty() {
+    let ruler = fixtures::ruler_km();
+
+    // test with empty linestring
+    let line = line_string![];
+    let point = point!(x: -77.034076, y: 38.882017);
+    assert!(ruler.point_on_line(&line, &point).is_none());
 }
 
 #[test]
