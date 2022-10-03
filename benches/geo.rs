@@ -20,7 +20,7 @@ lazy_static! {
 }
 
 fn cheap_ruler_distance(from: &Point<f64>, to: &Point<f64>) -> f64 {
-    let ruler = CheapRuler::new(from.lat(), DistanceUnit::Meters);
+    let ruler = CheapRuler::new(from.y(), DistanceUnit::Meters);
     ruler.distance(from, to)
 }
 
@@ -53,7 +53,7 @@ fn benchmark_distance(c: &mut Criterion) {
 }
 
 fn cheap_ruler_bearing(from: &Point<f64>, to: &Point<f64>) -> f64 {
-    let ruler = CheapRuler::new(from.lat(), DistanceUnit::Meters);
+    let ruler = CheapRuler::new(from.y(), DistanceUnit::Meters);
     ruler.bearing(from, to)
 }
 
@@ -82,7 +82,7 @@ fn cheap_ruler_destination(
     dist: f64,
     from: &Point<f64>,
 ) -> Point<f64> {
-    let ruler = CheapRuler::new(from.lat(), DistanceUnit::Meters);
+    let ruler = CheapRuler::new(from.y(), DistanceUnit::Meters);
     ruler.destination(from, dist, bearing)
 }
 
