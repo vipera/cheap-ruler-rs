@@ -18,48 +18,6 @@ use fixtures::turf;
 use geo_types::{Coordinate, LineString, Polygon};
 
 #[test]
-fn test_get_unit() {
-    let ruler = fixtures::ruler_miles();
-    assert_eq!(ruler.distance_unit(), DistanceUnit::Miles);
-}
-
-#[test]
-fn test_change_unit() {
-    let mut ruler = fixtures::ruler_km();
-
-    let p1 = point!(x: 30.5, y: 32.8351);
-    let p2 = point!(x: 30.51, y: 32.8451);
-
-    let d = ruler.distance(&p1, &p2);
-    ruler.change_unit(DistanceUnit::Meters);
-    let d2 = ruler.distance(&p1, &p2);
-
-    assert_eq_err!(1000.0, d2 / d, 1e-12);
-}
-
-#[test]
-fn test_clone_with_unit() {
-    let ruler = fixtures::ruler_km();
-
-    let p1 = point!(x: 30.5, y: 32.8351);
-    let p2 = point!(x: 30.51, y: 32.8451);
-
-    // the operation should be the same as cloning the ruler, then changing its
-    // unit
-    let mut r1 = ruler.clone();
-    r1.change_unit(DistanceUnit::Meters);
-    let r2 = ruler.clone_with_unit(DistanceUnit::Meters);
-
-    let d = ruler.distance(&p1, &p2);
-    let d1 = r1.distance(&p1, &p2);
-    let d2 = r2.distance(&p1, &p2);
-
-    assert_eq_err!(1.0, d2 / d1, 1e-12);
-    assert_eq_err!(1000.0, d1 / d, 1e-12);
-    assert_eq_err!(1000.0, d2 / d, 1e-12);
-}
-
-#[test]
 fn test_distance() {
     let ruler = fixtures::ruler_km();
 

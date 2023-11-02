@@ -36,26 +36,6 @@ fn main() {
 }
 ```
 
-## Unit of distance
-
-This Rust port additionally allows the distance unit of the ruler to be changed
-and retrieved at any point after construction at the cost of larger memory size
-of the ruler struct itself (40 bytes instead of 16 bytes), but with no
-additional overhead.
-
-```rust
-extern crate cheap_ruler;
-use cheap_ruler::{CheapRuler, DistanceUnit};
-
-fn main() {
-  let mut ruler = CheapRuler::new(44.7192003, DistanceUnit::Meters);
-  println!("Distance unit: {:?}", ruler.distance_unit());
-
-  ruler.change_unit(DistanceUnit::Miles);
-  println!("Distance unit: {:?}", ruler.distance_unit());
-}
-```
-
 ## geo_types
 
 The library uses the geo-types crate for representation of points and
@@ -67,7 +47,7 @@ extern crate cheap_ruler;
 #[macro_use] extern crate geo_types;
 
 use cheap_ruler::{CheapRuler, DistanceUnit, Rect};
-use geo_types::{Coordinate};
+use geo_types::Coordinate;
 
 fn main() {
   let ruler = CheapRuler::new(32.8351, DistanceUnit::Kilometers);
