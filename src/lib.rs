@@ -9,6 +9,9 @@
 //! Note: WGS84 ellipsoid is used instead of the Clarke 1866 parameters used by
 //! the FCC formulas. See cheap-ruler-cpp#13 for more information.
 
+// Temporarily permit geo_types::Coordinate until geo-types 0.8
+#![allow(deprecated)]
+
 #[macro_use]
 extern crate geo_types;
 

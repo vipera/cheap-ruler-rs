@@ -1,3 +1,6 @@
+// Temporarily permit geo_types::Coordinate until geo-types 0.8
+#![allow(deprecated)]
+
 extern crate cheap_ruler;
 #[macro_use]
 extern crate geo_types;
