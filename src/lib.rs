@@ -45,9 +45,6 @@ where
 {
     kx: T,
     ky: T,
-    dkx: T,
-    dky: T,
-    distance_unit: DistanceUnit,
 }
 
 impl<T> CheapRuler<T>
@@ -69,13 +66,7 @@ where
 
         let (kx, ky) = calculate_multipliers(distance_unit, dkx, dky);
 
-        Self {
-            kx,
-            ky,
-            dkx,
-            dky,
-            distance_unit,
-        }
+        Self { kx, ky }
     }
 
     /// Creates a ruler object from tile coordinates (y and z). Convenient in
@@ -104,39 +95,6 @@ where
         let latitude = n.sinh().atan().to_degrees();
 
         Self::new(latitude, distance_unit)
-    }
-
-    /// Changes the ruler's unit to the given one
-    ///
-    /// # Arguments
-    ///
-    /// * `distance_unit` - New distance unit to express distances in
-    pub fn change_unit(&mut self, distance_unit: DistanceUnit) {
-        let (kx, ky) = calculate_multipliers(distance_unit, self.dkx, self.dky);
-        self.distance_unit = distance_unit;
-        self.kx = kx;
-        self.ky = ky;
-    }
-
-    /// Clones the ruler to a new one with the given unit
-    ///
-    /// # Arguments
-    ///
-    /// * `distance_unit` - Distance unit to express distances in the new ruler
-    pub fn clone_with_unit(&self, distance_unit: DistanceUnit) -> Self {
-        let (kx, ky) = calculate_multipliers(distance_unit, self.dkx, self.dky);
-        Self {
-            distance_unit,
-            kx,
-            ky,
-            dkx: self.dkx,
-            dky: self.dky,
-        }
-    }
-
-    /// Gets the distance unit that the ruler was instantiated with
-    pub fn distance_unit(&self) -> DistanceUnit {
-        self.distance_unit
     }
 
     /// Calculates the square of the approximate distance between two

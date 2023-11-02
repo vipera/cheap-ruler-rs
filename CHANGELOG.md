@@ -1,3 +1,15 @@
+## 0.4.0 (2023-11-02)
+
+With the 0.4.0 release, the size of the cheap ruler struct has been more than
+halved, but the ability to change or retrieve the distance unit has been
+removed.
+
+### Feature changes
+
+- **Breaking** The methods `change_unit`, `clone_with_unit` and `distance_unit`
+  have been removed. If you need to change the unit of a cheap ruler, you should
+  construct a new instance or multiply resulting distances by a conversion factor.
+
 ## 0.3.0 (2021-03-17)
 
 The 0.3.0 release is a breaking change that makes the entire API type generic,
