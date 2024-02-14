@@ -101,6 +101,6 @@ full license content.
 [CHANGELOG]: CHANGELOG.md
 
 <!-- Badges -->
-[actions badge]: https://img.shields.io/github/workflow/status/vipera/cheap-ruler-rs/CI?style=flat-square
+[actions badge]: https://img.shields.io/github/actions/workflow/status/vipera/cheap-ruler-rs/rust.yml?branch=master&style=flat-square
 [actions]: https://github.com/vipera/cheap-ruler-rs/actions?query=workflow%3ACI
 [license badge]: https://img.shields.io/github/license/vipera/cheap-ruler-rs?style=flat-square
