@@ -80,6 +80,12 @@ destination/cheap_ruler time:   [24.984 ns 25.183 ns 25.471 ns]
 destination/haversine   time:   [82.251 ns 82.670 ns 83.169 ns]
 ```
 
+# Correctness
+
+The implementation is checked with tests against the same data as
+[cheap-ruler-cpp], i.e. test expectations precomputed with the Turf.js library
+and lines fixtures as present in [cheap-ruler].
+
 # Changelog
 
 See the [CHANGELOG] file for details.
@@ -91,7 +97,8 @@ full license content.
 
 # TODO
 
-* Use idiomatic Rust for methods that follow C++ conventions.
+* API: Make the use of geo_types an optional feature rather than a requirement.
+* Style: Use idiomatic Rust for method implementations that follow C++ coding conventions.
 
 <!-- References -->
 [cheap-ruler]: https://github.com/mapbox/cheap-ruler
