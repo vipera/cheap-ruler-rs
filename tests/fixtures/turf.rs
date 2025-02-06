@@ -1,4 +1,4 @@
-use geo_types::{point, Point};
+use geo_types::{Point, point};
 
 lazy_static! {
     pub static ref DISTANCE: Box<[f64]> = Box::new([
