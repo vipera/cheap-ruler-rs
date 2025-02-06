@@ -1,4 +1,4 @@
-use geo_types::{line_string, point, LineString, Point};
+use geo_types::{LineString, Point, line_string, point};
 
 lazy_static! {
     pub static ref LINES: Box<[LineString<f64>]> = Box::new([

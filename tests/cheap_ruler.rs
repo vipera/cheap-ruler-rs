@@ -369,10 +369,10 @@ fn test_buffer_point() {
 fn test_buffer_bbox() {
     let ruler = fixtures::ruler_km();
 
-    let bbox = Rect::new(
-        Coordinate { x: 30.0, y: 38.0 },
-        Coordinate { x: 40.0, y: 39.0 },
-    );
+    let bbox = Rect::new(Coordinate { x: 30.0, y: 38.0 }, Coordinate {
+        x: 40.0,
+        y: 39.0,
+    });
     let bbox2 = ruler.buffer_bbox(&bbox, 1.0);
 
     assert_eq_err!(29.989319515875376, bbox2.min().x, 1e-6);
@@ -385,10 +385,10 @@ fn test_buffer_bbox() {
 fn test_inside_bbox() {
     let ruler = fixtures::ruler_km();
 
-    let bbox = Rect::new(
-        Coordinate { x: 30.0, y: 38.0 },
-        Coordinate { x: 40.0, y: 39.0 },
-    );
+    let bbox = Rect::new(Coordinate { x: 30.0, y: 38.0 }, Coordinate {
+        x: 40.0,
+        y: 39.0,
+    });
 
     assert!(ruler.inside_bbox(&point!(x: 35.0, y: 38.5), &bbox));
     assert!(!ruler.inside_bbox(&point!(x: 45.0, y: 45.0), &bbox));
@@ -398,10 +398,10 @@ fn test_inside_bbox() {
 fn test_inside_bbox_over_dateline() {
     let ruler = fixtures::ruler_km();
 
-    let bbox = Rect::new(
-        Coordinate { x: 179.9, y: 32.7 },
-        Coordinate { x: -179.9, y: 32.9 },
-    );
+    let bbox = Rect::new(Coordinate { x: 179.9, y: 32.7 }, Coordinate {
+        x: -179.9,
+        y: 32.9,
+    });
 
     assert!(ruler.inside_bbox(&point!(x: 180.0, y: 32.8), &bbox));
 }

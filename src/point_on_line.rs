@@ -1,6 +1,6 @@
 use geo_types::Point;
-use num_traits::cast::NumCast;
 use num_traits::Num;
+use num_traits::cast::NumCast;
 use std::fmt;
 
 pub struct PointOnLine<T>

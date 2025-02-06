@@ -8,11 +8,11 @@ extern crate lazy_static;
 
 use cheap_ruler::{CheapRuler, DistanceUnit};
 use criterion::Criterion;
+use geo::Point;
 use geo::algorithm::bearing::Bearing;
 use geo::algorithm::haversine_destination::HaversineDestination;
 use geo::algorithm::haversine_distance::HaversineDistance;
 use geo::algorithm::vincenty_distance::VincentyDistance;
-use geo::Point;
 
 lazy_static! {
     static ref STINICA: Point<f64> = point!(x: 14.890127, y: 44.7195996);
