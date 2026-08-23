@@ -129,6 +129,24 @@ fn test_area() {
 }
 
 #[test]
+fn test_area_empty_interior_ring() {
+    let ruler = fixtures::ruler_km();
+    let zone_outer = line_string![
+        (x: 71.329356, y: -6.19387),
+        (x: 71.353358, y: -6.172451),
+        (x: 71.368091, y: -6.172537),
+        (x: 71.401737, y: -6.189896),
+        (x: 71.301494, y: -6.31167),
+    ];
+
+    let expected = ruler.area(&Polygon::new(zone_outer.clone(), vec![]));
+    let with_empty_ring =
+        ruler.area(&Polygon::new(zone_outer, vec![LineString::new(vec![])]));
+
+    assert_eq_err!(expected, with_empty_ring, 0.003);
+}
+
+#[test]
 fn test_area_subtractions() {
     let ruler = fixtures::ruler_km();
     let zone_outer = line_string![

@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated changelog to be in keepachangelog format.
 - Added "correctness" section to readme.
 
+### Fixed
+
+- `area` no longer panics with a subtract overflow on polygons that contain an
+  empty ring.
+
 ## [0.4.0] - 2023-11-02
 
 With the 0.4.0 release, the size of the cheap ruler struct has been more than
