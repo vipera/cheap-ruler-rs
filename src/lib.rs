@@ -570,6 +570,9 @@ fn long_diff<T: Float>(a: T, b: T) -> T {
 
 fn sum_area<T: Float + fmt::Debug>(line: &[Point<T>]) -> T {
     let line_len = line.len();
+    if line_len == 0 {
+        return T::zero();
+    }
     let mut sum = T::zero();
     let mut k = line_len - 1;
     for j in 0..line_len {
